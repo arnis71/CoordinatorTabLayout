@@ -1,5 +1,10 @@
 package cn.hugeterry.coordinatortablayout;
 
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
@@ -16,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
@@ -158,6 +164,7 @@ public class CoordinatorTabLayout extends CoordinatorLayout {
 
     private void setupTabLayout() {
         mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            int lastTabPos = 0;
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 mImageView.startAnimation(AnimationUtils.loadAnimation(mContext, R.anim.anim_dismiss));
@@ -169,11 +176,17 @@ public class CoordinatorTabLayout extends CoordinatorLayout {
                     mLoadHeaderImagesListener.loadHeaderImages(mImageView, tab);
                 }
                 if (mColorArray != null) {
-                    mCollapsingToolbarLayout.setContentScrimColor(
-                            ContextCompat.getColor(
-                                    mContext, mColorArray[tab.getPosition()]));
+                    ValueAnimator valueAnimator = ValueAnimator.ofObject(new ArgbEvaluator(),ContextCompat.getColor(mContext, mColorArray[lastTabPos]),ContextCompat.getColor(mContext, mColorArray[tab.getPosition()]));
+                    valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        @Override
+                        public void onAnimationUpdate(ValueAnimator animation) {
+                            mCollapsingToolbarLayout.setContentScrimColor((int) animation.getAnimatedValue());
+                        }
+                    });
+                    valueAnimator.start();
                 }
                 mImageView.setAnimation(AnimationUtils.loadAnimation(mContext, R.anim.anim_show));
+                lastTabPos = tab.getPosition();
             }
 
             @Override
